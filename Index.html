@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spaceship Flight Simulator</title>
+  <title>Spaceship Wowie</title>
   <style>
     body {
       margin: 0;
@@ -54,7 +54,7 @@
     const spaceship = new SpaceshipModel();
     shipGroup.add(spaceship.group);
 
-    // 3. BRIGHT TESTING LIGHTS
+    // LIGHTS FOR TESTING
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444455, 1.8);
     scene.add(hemiLight);
 
@@ -66,7 +66,7 @@
     interiorLight.position.set(0, 0.5, -0.2);
     shipGroup.add(interiorLight);
 
-    // 4. UNIFIED MOUSE CONTROLS SETUP
+    // mouse controls for camera
     const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
 
     window.addEventListener('mousemove', (e) => {
@@ -74,11 +74,11 @@
       mouse.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
     });
 
-    // Control parameters
-    const maxCameraYaw = Math.PI * 0.25;   // Capped at 45° left / 45° right (90° total field sweep)
-    const maxCameraPitch = Math.PI * 0.15; // Capped at ~27° up / down
-    const shipTurnSpeed = 0.8;            // Steadier, gentler steering speed
-    const flySpeed = 7.0;                  // Forward speed
+    // control parameters
+    const maxCameraYaw = Math.PI * 0.25;   // 45 degrees left and right cap
+    const maxCameraPitch = Math.PI * 0.15; // roughly 27 degrees up and down
+    const shipTurnSpeed = 0.8;            // steering speed
+    const flySpeed = 7.0;                  // forward speed
     const forwardVector = new THREE.Vector3();
 
     // 5. ANIMATION LOOP
@@ -90,21 +90,21 @@
       const delta = clock.getDelta();
       const time = clock.getElapsedTime();
 
-      // Smooth mouse interpolation
+      // mouth interloptation
       mouse.x += (mouse.targetX - mouse.x) * 0.08;
       mouse.y += (mouse.targetY - mouse.y) * 0.08;
 
-      // A. CAMERA FREELOOK (Look-around capped strictly to 90° arc)
+      // user camera look 
       camera.rotation.y = -mouse.x * maxCameraYaw;
       camera.rotation.x = mouse.y * maxCameraPitch;
       camera.rotation.z = -mouse.x * 0.08;
 
-      // B. SHIP STEERING (Turns ship in same direction at gentler rate)
+      // ship steering movement (reduced compared to camera)
       shipGroup.rotation.y -= mouse.x * shipTurnSpeed * delta;
       shipGroup.rotation.x += mouse.y * shipTurnSpeed * delta;
       shipGroup.rotation.z = -mouse.x * 0.22;
 
-      // C. FORWARD FLIGHT MOVEMENT
+      // forward movement
       forwardVector.set(0, 0, -1).applyQuaternion(shipGroup.quaternion);
       shipGroup.position.addScaledVector(forwardVector, flySpeed * delta);
 
