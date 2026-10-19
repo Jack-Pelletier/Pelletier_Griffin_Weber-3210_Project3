@@ -1,7 +1,6 @@
-import * as THREE from 'three';
 // there is a lot of clipping and dimensions not lining up after changes, will clean up later :I
 
-export class SpaceshipModel {
+class SpaceshipModel {
   constructor() {
     // using 'this' for more consise text
     this.group = new THREE.Group();
