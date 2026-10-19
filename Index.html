@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,21 +17,16 @@
       height: 100vh;
     }
   </style>
-
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-      }
-    }
-  </script>
 </head>
 <body>
   <div id="canvas-container"></div>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { SpaceshipModel } from './JS/SpaceshipModel.js';
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.min.js"></script>
+  <script src="./JS/SpaceshipModel.js"></script>
+  <script src="./JS/Asteroids.js"></script>
+  <script src="./JS/Main.js"></script>
+
+  <script>
 
     // 1. SCENE & RENDERER SETUP
     const container = document.getElementById('canvas-container');
@@ -65,6 +61,9 @@
     const interiorLight = new THREE.PointLight(0xe0f4ff, 2.5, 4.0);
     interiorLight.position.set(0, 0.5, -0.2);
     shipGroup.add(interiorLight);
+
+    // Create the asteroid field
+    const asteroidField = createSpaceEnvironment(scene);
 
     // mouse controls for camera
     const mouse = { x: 0, y: 0, targetX: 0, targetY: 0 };
@@ -109,6 +108,9 @@
       shipGroup.position.addScaledVector(forwardVector, flySpeed * delta);
 
       spaceship.update(time);
+
+      // Update the asteroid field
+      updateSpaceEnvironment(asteroidField, camera, time, delta);
 
       renderer.render(scene, camera);
     }
