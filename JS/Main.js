@@ -57,21 +57,65 @@ asteroid.movementType === 2
     collisionNormal.subVectors(closestPoint, asteroidPosition);
 
     const distance = collisionNormal.length();
+
+    const scale = 
+    asteroid.size *(1 + 0.2 * Math.sin(asteroid.lastCollisionTime * asteroid.driftSpeed + asteroid.Phase));
+
+    const radius = scale;
+
+    if (distance < radius) {
+        asteroid.isColliding = true;
+    if (distance < 0.0001){
+        collisionNormal.subVectors(shipCenter, asteroidPosition);
+
+
+        if(collisionNormal.lengthsq() < 0.0001){
+            collisionNormal.set(0,0,1);
+        }
+    }
+
+collisionNormal.normalize();
+
+const  pushDistance = radius - distance + 0.01;
+
+asteroid.x += collisionNormal.x * pushDistance;
+asteroid.y += collisionNormal.y * pushDistance;
+asteroid.z += collisionNormal.z * pushDistance;
+
+const velocity = asteroid.velocity;
+const dot = velocity.dot(collisionNormal);
+
+if(dot < 0){
+    velocity.addScaledVector(collisionNormal, -2 * dot);
 }
 
-for(let i = 0; i < asteroidField.asteroidCount; i++) {
+if(velocity.dot(collisionNormal) < 0.5){
+    velocity.addScaledVector(
+        collisionNormal,
+        2 - velocity.dot(collisionNormal)
 
-
-for(let j = i + 1; j < asteroidField.asteroidCount; j++) {
-
-if (objCollision(
-    obj1.x, obj1.y, obj1.z, obj1.size,
-    obj2.x, obj2.y, obj2.z, obj2.size)) {
-    obj1.isColliding = true;
-    obj2.isColliding = true;
-
-}
+    );
 }
 
+dummy.position.set(
+    asteroid.x,
+    asteroid.y,
+    asteroid.z
+);
+
+dummy.rotation.set(
+    asteroid.lastCollisionTime * asteroid.rotationSpeed,
+    asteroid.lastCollisionTime * asteroid.rotationSpeed * 0.7,
+    asteroid.lastCollisionTime * asteroid.rotationSpeed * 0.4
+);
+dummy.scale.setScalar(scale);
+dummy.updateMatrix();
+asteroidPosition.setMatrixAt(i, dummy.matrix);
+
+        
 }
+
+    }
+    asteroidPosition.instanceMatrix.needsUpdate = true;
+
 }
