@@ -55,7 +55,15 @@ function createAsteroidField(scene) {
             driftAmount: randomRange(1, 8),
 
             phase: randomRange(0, Math.PI * 2),
-            movementType: Math.floor(Math.random() * 3)
+            movementType: Math.floor(Math.random() * 3),
+
+            velocity: new THREE.Vector3(
+                randomRange(-0.05, 0.05),
+                randomRange(-0.05, 0.05),
+                randomRange(-0.1, -0.01)
+            ),
+            isColliding: false,
+            lastCollisionTime: 0,
         };
 
         asteroidData.push(asteroid);
@@ -125,7 +133,13 @@ function updateAsteroidField(asteroidField, camera, time, deltaTime) {
     for (let i = 0; i < asteroidCount; i++) {
 
         const asteroid = asteroidData[i];
+        
 
+        asteroid.lastCollisionTime = time;
+        //adds velocity from previous collisions
+        asteroid.x += asteroid.velocity.x * deltaTime;
+        asteroid.y += asteroid.velocity.y * deltaTime;
+        asteroid.z += asteroid.velocity.z * deltaTime;
 
         // Recycle asteroid positions around the camera
         // This creates an effectively infinite field
