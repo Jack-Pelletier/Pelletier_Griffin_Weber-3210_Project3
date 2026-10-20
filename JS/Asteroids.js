@@ -133,6 +133,8 @@ function updateAsteroidField(asteroidField, camera, time, deltaTime) {
     for (let i = 0; i < asteroidCount; i++) {
 
         const asteroid = asteroidData[i];
+
+        
         
 
         asteroid.lastCollisionTime = time;

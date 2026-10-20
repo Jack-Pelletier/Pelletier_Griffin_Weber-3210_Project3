@@ -111,6 +111,7 @@
 
       // Update the asteroid field
       updateSpaceEnvironment(asteroidField, camera, time, delta);
+      detectCollisions(asteroidField, spaceship, time);
 
       renderer.render(scene, camera);
     }
