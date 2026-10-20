@@ -33,21 +33,28 @@ spaceshipBox.getCenter(shipCenter);
     for (let i = 0; i < asteroidData.length; i++) {
         const asteroid = asteroidData[i];
         asteroid.isColliding = false;
-        
-const driftX = 
-asteroid.movementType === 2
-    ? Math.sin(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount
-    : Math.cos(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount;
+
+const phase = time * asteroid.driftSpeed + asteroid.phase;
+
+let driftX = 0;
+
+if (asteroid.movementType === 0) {
+    driftX = Math.sin(phase) * asteroid.driftAmount;
+} else if (asteroid.movementType === 1) {
+    driftX = Math.sin(phase) * asteroid.driftAmount;
+} else if (asteroid.movementType === 2) {
+    driftX = Math.cos(phase) * asteroid.driftAmount;
+}
 
     let x = asteroid.x + driftX;
     let y = asteroid.y;
     
 
     if (asteroid.movementType === 1) {
-        const t = Math.sin(time * asteroid.driftSpeed + asteroid.phase);
+        const t = Math.sin(phase);
         y += (t * t - 0.5) * asteroid.driftAmount;
     }else if (asteroid.movementType === 2) {
-    y += Math.sin(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount;
+    y += Math.sin(phase) * asteroid.driftAmount;
     }
 
     asteroidPosition.set(x, y, asteroid.z);
@@ -63,12 +70,23 @@ asteroid.movementType === 2
 
     const radius = scale;
 
-    if (distance < radius) {
+    if (distance < radius + 0.3) {
         asteroid.isColliding = true;
         console.log("collision detected")
     if (distance < 0.0001){
-        collisionNormal.subVectors(shipCenter, asteroidPosition);
+    const distances = [
+       { value: asteroidPosition.x - spaceshipBox.min.x, axis: 0, sign: -1 },
+        { value: spaceshipBox.max.x - asteroidPosition.x, axis: 0, sign: 1 },
+        { value: asteroidPosition.y - spaceshipBox.min.y, axis: 1, sign: -1 },
+        { value: spaceshipBox.max.y - asteroidPosition.y, axis: 1, sign: 1 },
+        { value: asteroidPosition.z - spaceshipBox.min.z, axis: 2, sign: -1 },
+        { value: spaceshipBox.max.z - asteroidPosition.z, axis: 2, sign: 1 }  
+    ];
 
+    distances.sort((a, b) => a.value - b.value);
+
+    collisionNormal.set(0,0,0);
+    collisionNormal.setComponent(distances[0].axis, distances[0].sign);
 
         if(collisionNormal.lengthSq() < 0.0001){
             collisionNormal.set(0,0,1);
