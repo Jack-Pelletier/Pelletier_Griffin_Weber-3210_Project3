@@ -16,23 +16,32 @@ function updateSpaceEnvironment(asteroidField, camera, time, deltaTime) {
 
 }
 
-function detectCollisions() {
+function detectCollisions(asteroidField, spaceshipModel) {
+const{asteroidData, dummy, asteroidCount} = asteroidField;
+spaceshipModel.group.updateMatrixWorld(); // Ensure the spaceship's world matrix is up to date
 
-let obj1;
-let obj2;
 
-    for (let i = 0; i < asteroidField.asteroidCount; i++) {
+const spaceshipBox = new THREE.Box3().setFromObject(spaceshipModel.group);
 
-        asteroidField[i].isColliding = false;
+const closestPoint = new THREE.Vector3();
+const asteroidPosition = new THREE.Vector3();
+const collisionNormal = new THREE.Vector3();
+const shipCenter = new THREE.Vector3();
+
+spaceshipBox.getCenter(shipCenter);
+
+    for (let i = 0; i < asteroidData.length; i++) {
+        const asteroid = asteroidData[i];
+        asteroid[i].isColliding = false;
 }
 
 for(let i = 0; i < asteroidField.asteroidCount; i++) {
-obj1 = asteroidField.asteroidData[i];
+
 
 for(let j = i + 1; j < asteroidField.asteroidCount; j++) {
-obj2 = spaceshipModel.group[j]; 
+
 if (objCollision(
-    obj1.x, obj1.y, obj1.z, obj1.size,
+    .x, obj1.y, obj1.z, obj1.size,
     obj2.x, obj2.y, obj2.z, obj2.size)) {
     obj1.isColliding = true;
     obj2.isColliding = true;
