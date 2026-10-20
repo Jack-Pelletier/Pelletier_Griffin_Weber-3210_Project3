@@ -36,40 +36,41 @@ spaceshipBox.getCenter(shipCenter);
        
 const driftX = 
 asteroid.movementType === 2
-    ? Math.sin(asteroid.lastCollisionTime * asteroid.driftSpeed + asteroid.Phase) * asteroid.driftAmount
-    : Math.cos(asteroid.lastCollisionTime * asteroid.driftSpeed + asteroid.Phase) * asteroid.driftAmount;
+    ? Math.sin(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount
+    : Math.cos(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount;
 
     let x = asteroid.x + driftX;
     let y = asteroid.y;
     
 
     if (asteroid.movementType === 1) {
-        const t = Math.sin(asteroid.lastCollisionTime * asteroid.driftSpeed + asteroid.Phase);
+        const t = Math.sin(time * asteroid.driftSpeed + asteroid.phase);
         y += (t * t - 0.5) * asteroid.driftAmount;
     }else if (asteroid.movementType === 2) {
-    y += Math.sin(asteroid.lastCollisionTime * asteroid.driftSpeed + asteroid.Phase) * asteroid.driftAmount;
+    y += Math.sin(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount;
     }
 
     asteroidPosition.set(x, y, asteroid.z);
 
     spaceshipBox.clampPoint(asteroidPosition, closestPoint);
 
-    collisionNormal.subVectors(closestPoint, asteroidPosition);
+    collisionNormal.subVectors(asteroidPosition, closestPoint);
 
     const distance = collisionNormal.length();
 
     const scale = 
-    asteroid.size *(1 + 0.2 * Math.sin(asteroid.lastCollisionTime * asteroid.driftSpeed + asteroid.Phase));
+    asteroid.size *(1 + 0.2 * Math.sin(time * asteroid.driftSpeed + asteroid.phase));
 
     const radius = scale;
 
     if (distance < radius) {
         asteroid.isColliding = true;
+        console.log("collision detected")
     if (distance < 0.0001){
         collisionNormal.subVectors(shipCenter, asteroidPosition);
 
 
-        if(collisionNormal.lengthsq() < 0.0001){
+        if(collisionNormal.lengthSq() < 0.0001){
             collisionNormal.set(0,0,1);
         }
     }
@@ -104,18 +105,18 @@ dummy.position.set(
 );
 
 dummy.rotation.set(
-    asteroid.lastCollisionTime * asteroid.rotationSpeed,
-    asteroid.lastCollisionTime * asteroid.rotationSpeed * 0.7,
-    asteroid.lastCollisionTime * asteroid.rotationSpeed * 0.4
+    time * asteroid.rotationSpeed,
+    time * asteroid.rotationSpeed * 0.7,
+    time * asteroid.rotationSpeed * 0.4
 );
 dummy.scale.setScalar(scale);
 dummy.updateMatrix();
-asteroidPosition.setMatrixAt(i, dummy.matrix);
+asteroidField.asteroids.setMatrixAt(i, dummy.matrix);
 
         
 }
 
     }
-    asteroidPosition.instanceMatrix.needsUpdate = true;
+    asteroidField.asteroids.instanceMatrix.needsUpdate = true;
 
 }
