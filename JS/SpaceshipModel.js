@@ -2,7 +2,7 @@
 
 class SpaceshipModel {
   constructor() {
-    // using 'this' for more consise text
+    // using 'this' for more concise text
     this.group = new THREE.Group();
 
     // materials
@@ -36,7 +36,13 @@ class SpaceshipModel {
         roughness: 0.8,
         metalness: 0.1,
         flatShading: true
-      })
+      }),
+      // Blocky display & indicator materials
+      screenCyan: new THREE.MeshBasicMaterial({ color: 0x00d5ff }),
+      screenOrange: new THREE.MeshBasicMaterial({ color: 0xff9900 }),
+      screenGreen: new THREE.MeshBasicMaterial({ color: 0x00ff88 }),
+      btnRed: new THREE.MeshBasicMaterial({ color: 0xff3344 }),
+      btnBlue: new THREE.MeshBasicMaterial({ color: 0x0088ff })
     };
 
     this.buildCockpit();
@@ -58,31 +64,31 @@ class SpaceshipModel {
 
     // main floor
     const floor = new THREE.Mesh(
-      new THREE.BoxGeometry(2.0, 0.08, 2.0),
+      new THREE.BoxGeometry(2.0, 0.1, 2.0),
       this.materials.hull
     );
-    floor.position.set(0, -0.95, -0.2);
+    floor.position.set(0, -1, -0.2);
     floorGroup.add(floor);
 
     // foot ramp
     const ramp = new THREE.Mesh(
-      new THREE.BoxGeometry(1.4, 0.06, 0.6),
+      new THREE.BoxGeometry(1.5, 0.05, 0.5),
       this.materials.hull
     );
-    ramp.position.set(0, -0.78, -1.05);
-    ramp.rotation.x = Math.PI * 0.18;
+    ramp.position.set(0, -0.8, -1.05);
+    ramp.rotation.x = Math.PI * 0.2;
     floorGroup.add(ramp);
 
     // foot pedals
-    const pedalGeo = new THREE.BoxGeometry(0.18, 0.28, 0.05);
+    const pedalGeo = new THREE.BoxGeometry(0.2, 0.3, 0.05);
     
     const leftPedal = new THREE.Mesh(pedalGeo, this.materials.accent);
-    leftPedal.position.set(-0.3, -0.65, -1.0);
+    leftPedal.position.set(-0.5, -0.5, -1.0);
     leftPedal.rotation.x = -Math.PI * 0.15;
     floorGroup.add(leftPedal);
 
     const rightPedal = new THREE.Mesh(pedalGeo, this.materials.accent);
-    rightPedal.position.set(0.3, -0.65, -1.0);
+    rightPedal.position.set(0.5, -0.5, -1.0);
     rightPedal.rotation.x = -Math.PI * 0.15;
     floorGroup.add(rightPedal);
 
@@ -95,30 +101,57 @@ class SpaceshipModel {
 
     // main center console
     const centerBlock = new THREE.Mesh(
-      new THREE.BoxGeometry(1.1, 0.45, 0.65),
+      new THREE.BoxGeometry(1, 0.45, 0.65),
       this.materials.dashboard
     );
-    centerBlock.position.set(0, -0.48, -0.80);
+    centerBlock.position.set(0, -0.5, -0.80);
     centerBlock.rotation.x = Math.PI * 0.15;
     dashGroup.add(centerBlock);
 
     // left console
     const leftWing = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.38, 0.55),
+      new THREE.BoxGeometry(0.75, 0.4, 0.5),
       this.materials.dashboard
     );
-    leftWing.position.set(-0.68, -0.48, -0.72);
-    leftWing.rotation.set(Math.PI * 0.12, Math.PI * 0.15, -Math.PI * 0.05);
+    leftWing.position.set(-0.8, -0.5, -0.8);
+    leftWing.rotation.set(Math.PI * 0.15, Math.PI * 0.15, -Math.PI * 0.05);
     dashGroup.add(leftWing);
 
     // right console
     const rightWing = new THREE.Mesh(
-      new THREE.BoxGeometry(0.5, 0.38, 0.55),
+      new THREE.BoxGeometry(0.75, 0.4, 0.5),
       this.materials.dashboard
     );
-    rightWing.position.set(0.68, -0.48, -0.72);
-    rightWing.rotation.set(Math.PI * 0.12, -Math.PI * 0.15, Math.PI * 0.05);
+    rightWing.position.set(0.8, -0.5, -0.8);
+    rightWing.rotation.set(Math.PI * 0.15, -Math.PI * 0.15, Math.PI * 0.05);
     dashGroup.add(rightWing);
+
+    // center screen
+    const mainScreen = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.25, 0.02),
+      this.materials.screenCyan
+    );
+    mainScreen.position.set(0, -0.4, -0.75);
+    mainScreen.rotation.x = Math.PI * 0.15;
+    dashGroup.add(mainScreen);
+
+    // left screen
+    const leftScreen = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.25, 0.02),
+      this.materials.screenOrange
+    );
+    leftScreen.position.set(-0.7, -0.45, -0.75);
+    leftScreen.rotation.set(Math.PI * 0.15, Math.PI * 0.15, -Math.PI * 0.05);
+    dashGroup.add(leftScreen);
+
+    // right screen
+    const rightScreen = new THREE.Mesh(
+      new THREE.BoxGeometry(0.4, 0.25, 0.02),
+      this.materials.screenGreen
+    );
+    rightScreen.position.set(0.7, -0.45, -0.75);
+    rightScreen.rotation.set(Math.PI * 0.15, -Math.PI * 0.15, Math.PI * 0.05);
+    dashGroup.add(rightScreen);
 
     this.group.add(dashGroup);
   }
@@ -129,84 +162,101 @@ class SpaceshipModel {
 
     // overhead
     const roof = new THREE.Mesh(
-      new THREE.BoxGeometry(1.6, 0.1, 1.4),
+      new THREE.BoxGeometry(1.5, 0.1, 1.5),
       this.materials.hull
     );
-    roof.position.set(0, 0.72, -0.2);
+    roof.position.set(0, 0.75, -0.2);
     structureGroup.add(roof);
 
     // roof console
     const roofConsole = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.12, 0.8),
+      new THREE.BoxGeometry(0.5, 0.15, 0.75),
       this.materials.dashboard
     );
-    roofConsole.position.set(0, 0.62, -0.3);
+    roofConsole.position.set(0, 0.7, -0.4);
     roofConsole.rotation.x = -Math.PI * 0.05;
     structureGroup.add(roofConsole);
 
+    // overhead screen
+    const roofDisplay = new THREE.Mesh(
+      new THREE.BoxGeometry(0.35, 0.02, 0.25),
+      this.materials.screenCyan
+    );
+    roofDisplay.position.set(0, 0.6, -0.4);
+    roofDisplay.rotation.x = -Math.PI * 0.05;
+    structureGroup.add(roofDisplay);
+
     // left wall
     const leftWall = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 1.2, 1.6),
+      new THREE.BoxGeometry(0.1, 2, 1.5),
       this.materials.hull
     );
-    leftWall.position.set(-0.95, -0.05, -0.2);
+    leftWall.position.set(-1, 0, -0.2);
     structureGroup.add(leftWall);
 
     // right wall
     const rightWall = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 1.2, 1.6),
+      new THREE.BoxGeometry(0.1, 2, 1.5),
       this.materials.hull
     );
-    rightWall.position.set(0.95, -0.05, -0.2);
+    rightWall.position.set(1, 0, -0.2);
     structureGroup.add(rightWall);
 
     // left desk
     const leftDesk = new THREE.Mesh(
-      new THREE.BoxGeometry(0.35, 0.35, 1.1),
+      new THREE.BoxGeometry(0.35, 0.35, 1),
       this.materials.dashboard
     );
-    leftDesk.position.set(-0.78, -0.58, -0.2);
+    leftDesk.position.set(-0.8, -0.6, -0.2);
     structureGroup.add(leftDesk);
 
     // right desk
     const rightDesk = new THREE.Mesh(
-      new THREE.BoxGeometry(0.35, 0.35, 1.1),
+      new THREE.BoxGeometry(0.35, 0.35, 1),
       this.materials.dashboard
     );
-    rightDesk.position.set(0.78, -0.58, -0.2);
+    rightDesk.position.set(0.8, -0.6, -0.2);
     structureGroup.add(rightDesk);
+
+    // left desk throttle
+    const throttleBase = new THREE.Mesh(
+      new THREE.BoxGeometry(0.1, 0.05, 0.25),
+      this.materials.accent
+    );
+    throttleBase.position.set(-0.75, -0.40, -0.25);
+    structureGroup.add(throttleBase);
+
+    // the switch
+    const throttleLever = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.12, 0.2),
+      this.materials.frame
+    );
+    throttleLever.position.set(-0.75, -0.4, -0.25);
+    throttleLever.rotation.x = -Math.PI * -0.1;
+    structureGroup.add(throttleLever);
+
+    // right desk pad
+    const keypad = new THREE.Mesh(
+      new THREE.BoxGeometry(0.20, 0.02, 0.25),
+      this.materials.accent
+    );
+    keypad.position.set(0.75, -0.4, -0.25);
+    structureGroup.add(keypad);
 
     this.group.add(structureGroup);
   }
 
-  // seat
+  // seat (might remove as camera bounds dont show it)
   buildSeat() {
     const seatGroup = new THREE.Group();
 
     // seat cushion
     const seatBase = new THREE.Mesh(
-      new THREE.BoxGeometry(0.6, 0.18, 0.6),
+      new THREE.BoxGeometry(0.6, 0.2, 0.5),
       this.materials.seat
     );
-    seatBase.position.set(0, -0.72, 0.1);
+    seatBase.position.set(0, -0.75, 0.1);
     seatGroup.add(seatBase);
-
-    // back (might not be visible anymore)
-    const backrest = new THREE.Mesh(
-      new THREE.BoxGeometry(0.58, 0.85, 0.15),
-      this.materials.seat
-    );
-    backrest.position.set(0, -0.22, 0.42);
-    backrest.rotation.x = -Math.PI * 0.06;
-    seatGroup.add(backrest);
-
-    // Headrest
-    const headrest = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.28, 0.12),
-      this.materials.seat
-    );
-    headrest.position.set(0, 0.32, 0.38);
-    seatGroup.add(headrest);
 
     this.group.add(seatGroup);
   }
@@ -217,28 +267,28 @@ class SpaceshipModel {
 
     // visor
     const topVisor = new THREE.Mesh(
-      new THREE.BoxGeometry(1.6, 0.12, 0.12),
+      new THREE.BoxGeometry(1.5, 0.1, 0.1),
       this.materials.frame
     );
-    topVisor.position.set(0, 0.58, -0.72);
+    topVisor.position.set(0, 0.7, -0.75);
     frameGroup.add(topVisor);
 
     // left pillar
     const leftPillar = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 1.1, 0.08),
+      new THREE.BoxGeometry(0.1, 1.5, 0.1),
       this.materials.frame
     );
-    leftPillar.position.set(-0.78, 0.08, -0.72);
-    leftPillar.rotation.set(Math.PI * 0.06, 0, -Math.PI * 0.12);
+    leftPillar.position.set(-0.75, 0.1, -0.75);
+    leftPillar.rotation.set(Math.PI * 0.05, 0, -Math.PI * 0.12);
     frameGroup.add(leftPillar);
 
     // right pillar
     const rightPillar = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 1.1, 0.08),
+      new THREE.BoxGeometry(0.1, 1.5, 0.1),
       this.materials.frame
     );
-    rightPillar.position.set(0.78, 0.08, -0.72);
-    rightPillar.rotation.set(Math.PI * 0.06, 0, Math.PI * 0.12);
+    rightPillar.position.set(0.75, 0.1, -0.75);
+    rightPillar.rotation.set(Math.PI * 0.05, 0, Math.PI * 0.12);
     frameGroup.add(rightPillar);
 
     this.group.add(frameGroup);
@@ -248,30 +298,30 @@ class SpaceshipModel {
   buildFlightControls() {
     const controlGroup = new THREE.Group();
 
-    // main Column
-    const shaft = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.32, 0.05),
-      this.materials.accent
-    );
-    shaft.position.set(0, -0.48, -0.52);
-    shaft.rotation.x = -Math.PI * 0.12;
-    controlGroup.add(shaft);
-
-    // handle bar
-    const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.26, 0.04, 0.04),
+    // control base
+    const mountBase = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.08, 0.12),
       this.materials.frame
     );
-    handle.position.set(0, -0.34, -0.55);
-    controlGroup.add(handle);
+    mountBase.position.set(0, -0.35, -0.45);
+    controlGroup.add(mountBase);
 
-    // left throttle lever
-    const throttle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.08, 0.14, 0.16),
+    // flight shaft
+    const shaft = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, 0.32, 0.04),
       this.materials.accent
     );
-    throttle.position.set(-0.68, -0.35, -0.3);
-    controlGroup.add(throttle);
+    shaft.position.set(0, -0.25, -0.5);
+    shaft.rotation.x = -Math.PI * 0.10;
+    controlGroup.add(shaft);
+
+    // handle Bar
+    const handle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.25, 0.05, 0.05),
+      this.materials.frame
+    );
+    handle.position.set(0, -0.1, -0.475);
+    controlGroup.add(handle);
 
     this.group.add(controlGroup);
   }
@@ -281,11 +331,19 @@ class SpaceshipModel {
     const mirrorGroup = new THREE.Group();
 
     const bezel = new THREE.Mesh(
-      new THREE.BoxGeometry(0.55, 0.24, 0.04),
+      new THREE.BoxGeometry(0.55, 0.25, 0.05),
       this.materials.frame
     );
-    bezel.position.set(0, 0.44, -0.68);
+    bezel.position.set(0, 0.45, -0.7);
     mirrorGroup.add(bezel);
+
+    // rear view temp model
+    const mirrorScreen = new THREE.Mesh(
+      new THREE.BoxGeometry(0.48, 0.18, 0.02),
+      this.materials.screenCyan
+    );
+    mirrorScreen.position.set(0, 0.45, -0.67);
+    mirrorGroup.add(mirrorScreen);
 
     this.group.add(mirrorGroup);
   }
