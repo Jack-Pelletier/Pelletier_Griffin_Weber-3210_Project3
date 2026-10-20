@@ -93,7 +93,7 @@ if(dot < 0){
 if(velocity.dot(collisionNormal) < 0.5){
     velocity.addScaledVector(
         collisionNormal,
-        2 - velocity.dot(collisionNormal)
+        5 - velocity.dot(collisionNormal)
 
     );
 }
