@@ -33,7 +33,7 @@ spaceshipBox.getCenter(shipCenter);
     for (let i = 0; i < asteroidData.length; i++) {
         const asteroid = asteroidData[i];
         asteroid.isColliding = false;
-       
+        
 const driftX = 
 asteroid.movementType === 2
     ? Math.sin(time * asteroid.driftSpeed + asteroid.phase) * asteroid.driftAmount

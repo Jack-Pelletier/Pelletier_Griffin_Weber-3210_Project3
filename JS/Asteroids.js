@@ -63,7 +63,7 @@ function createAsteroidField(scene) {
                 randomRange(-0.1, -0.01)
             ),
             isColliding: false,
-            lastCollisionTime: 0,
+     
         };
 
         asteroidData.push(asteroid);
@@ -134,7 +134,7 @@ function updateAsteroidField(asteroidField, camera, time, deltaTime) {
 
         const asteroid = asteroidData[i];
 
-        
+
         
 
         asteroid.lastCollisionTime = time;
