@@ -10,9 +10,14 @@ function createSpaceEnvironment(scene) {
 
 
 // Update the asteroid environment
-function updateSpaceEnvironment(asteroidField, camera, time, deltaTime) {
+function updateSpaceEnvironment(asteroidField, camera, time, deltaTime, spaceshipModel) {
 
     updateAsteroidField(asteroidField, camera, time, deltaTime);
+
+    // Detect collisions with the spaceship
+    if (spaceshipModel && spaceshipModel.group) {
+        detectCollisions(asteroidField, spaceshipModel, time);
+    }
 
 }
 
@@ -73,6 +78,10 @@ if (asteroid.movementType === 0) {
     if (distance < radius + 0.3) {
         asteroid.isColliding = true;
         console.log("collision detected")
+
+        // Calculate the distance required to push the asteroid outside the spaceship
+        let pushDistance = radius - distance + 0.3;
+
     if (distance < 0.0001){
     const distances = [
        { value: asteroidPosition.x - spaceshipBox.min.x, axis: 0, sign: -1 },
@@ -88,6 +97,9 @@ if (asteroid.movementType === 0) {
     collisionNormal.set(0,0,0);
     collisionNormal.setComponent(distances[0].axis, distances[0].sign);
 
+        // Include the distance to the nearest box face
+        pushDistance = distances[0].value + radius + 0.3;
+
         if(collisionNormal.lengthSq() < 0.0001){
             collisionNormal.set(0,0,1);
         }
@@ -95,8 +107,7 @@ if (asteroid.movementType === 0) {
 
 collisionNormal.normalize();
 
-const  pushDistance = radius - distance + 0.01;
-
+// Push the asteroid completely outside the spaceship
 asteroid.x += collisionNormal.x * pushDistance;
 asteroid.y += collisionNormal.y * pushDistance;
 asteroid.z += collisionNormal.z * pushDistance;
@@ -108,17 +119,20 @@ if(dot < 0){
     velocity.addScaledVector(collisionNormal, -2 * dot);
 }
 
-if(velocity.dot(collisionNormal) < 0.5){
+// Give the asteroid a stronger outward bounce
+const bounceSpeed = 12;
+
+if(velocity.dot(collisionNormal) < bounceSpeed){
     velocity.addScaledVector(
         collisionNormal,
-        5 - velocity.dot(collisionNormal)
-
+        bounceSpeed - velocity.dot(collisionNormal)
     );
 }
 
+// Apply the original animated drift when updating the instance matrix
 dummy.position.set(
-    asteroid.x,
-    asteroid.y,
+    asteroid.x + driftX,
+    asteroid.y + (y - asteroid.y + collisionNormal.y * pushDistance),
     asteroid.z
 );
 
