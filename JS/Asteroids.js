@@ -16,11 +16,7 @@ function createAsteroidField(scene) {
     const asteroidGeometry = new THREE.IcosahedronGeometry(1, 1);
 
     // Create shared material
-    const asteroidMaterial = new THREE.MeshStandardMaterial({
-        color: 0x888888,
-        roughness: 1,
-        flatShading: true
-    });
+    const asteroidMaterial = createAsteroidShaderMaterial();
 
     // Create the instanced asteroid mesh
     const asteroids = new THREE.InstancedMesh(asteroidGeometry, asteroidMaterial, asteroidCount);
@@ -72,7 +68,7 @@ function createAsteroidField(scene) {
         // Give each asteroid a different color
         const color = new THREE.Color();
 
-        color.setHSL(randomRange(0.05, 0.15), randomRange(0.05, 0.3), randomRange(0.3, 0.7));
+        color.setHSL(randomRange(0, 1), randomRange(0.3, 0.8), randomRange(0.3, 0.7));
 
         asteroids.setColorAt(i, color);
 
@@ -123,6 +119,9 @@ function updateAsteroidField(asteroidField, camera, time, deltaTime) {
         dummy,
         cameraPosition
     } = asteroidField;
+
+    // Update custom shader animation
+    asteroids.material.uniforms.uTime.value = time;
 
 
     // Get camera position in world coordinates
