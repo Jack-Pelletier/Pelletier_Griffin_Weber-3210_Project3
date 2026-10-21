@@ -15,7 +15,7 @@
       width: 100vw;
       height: 100vh;
     }
-    /* white border around rear-view viewport */
+    /* White border around rear-view viewport */
     #rear-view-border {
       position: absolute;
       top: 25px;
@@ -29,7 +29,7 @@
       box-sizing: border-box;
       border-radius: 2px;
     }
-    /* controls HUD display at the bottom center of screen */
+    /* Controls HUD display at the bottom center of screen */
     #hud-controls {
       position: absolute;
       bottom: 20px;
@@ -53,10 +53,10 @@
 <body>
   <div id="canvas-container"></div>
   
-  <!-- rear camera UI border -->
+  <!-- Rear camera UI border -->
   <div id="rear-view-border"></div>
 
-  <!-- bottom screen controls overlay -->
+  <!-- Bottom screen controls overlay -->
   <div id="hud-controls">
     MOUSE: LOOK / STEER &nbsp;|&nbsp; HOLD LMB: BOOST ENGINE
   </div>
@@ -83,8 +83,13 @@
     const shipGroup = new THREE.Group();
     scene.add(shipGroup);
 
+    // fov effect during boost
+    const baseFOV = 65;
+    const boostFOV = 80;
+    let currentFOV = baseFOV;
+
     // Primary Forward View Camera
-    const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(baseFOV, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.set(0, 0, 0);
     shipGroup.add(camera);
 
@@ -130,14 +135,14 @@
       if (e.button === 0) isBoosting = false;
     });
 
-    // ship control parameters
-    const maxCameraYaw = Math.PI * 0.25;   
-    const maxCameraPitch = Math.PI * 0.15; 
-    const shipTurnSpeed = 0.8;   
+    // Ship control parameters (Fixed syntax)
+    const maxCameraYaw = Math.PI * 0.25; // 45 degrees cap
+    const maxCameraPitch = Math.PI * 0.15; // ~27 degrees cap
+    const shipTurnSpeed = 0.8; // steering speed
     
-    // speed variables for engine boost
+    // Speed variables for engine boost
     const baseSpeed = 7.0;
-    const boostSpeed = 22.0;
+    const boostSpeed = 24.0;
     let currentSpeed = baseSpeed;
 
     const forwardVector = new THREE.Vector3();
@@ -165,9 +170,16 @@
       shipGroup.rotation.x += mouse.y * shipTurnSpeed * delta;
       shipGroup.rotation.z = -mouse.x * 0.22;
 
-      // Smooth acceleration / deceleration when holding LMB
+      // Smooth gradual momentum buildup/falloff for speed & camera FOV
       const targetSpeed = isBoosting ? boostSpeed : baseSpeed;
-      currentSpeed += (targetSpeed - currentSpeed) * 0.08;
+      const targetFOV = isBoosting ? boostFOV : baseFOV;
+
+      currentSpeed += (targetSpeed - currentSpeed) * 0.04;
+      currentFOV += (targetFOV - currentFOV) * 0.04;
+
+      // Update camera FOV zoom
+      camera.fov = currentFOV;
+      camera.updateProjectionMatrix();
 
       // Forward movement
       forwardVector.set(0, 0, -1).applyQuaternion(shipGroup.quaternion);
@@ -180,16 +192,16 @@
       updateSpaceEnvironment(asteroidField, camera, time, delta);
       detectCollisions(asteroidField, spaceship, time);
 
-      // rasterization with dual viewports
+      // Rasterization with dual viewports
       const w = window.innerWidth;
       const h = window.innerHeight;
 
-      // fullscreen main forward viewport
+      // Fullscreen main forward viewport
       renderer.setViewport(0, 0, w, h);
       renderer.setScissorTest(false);
       renderer.render(scene, camera);
 
-      // rear-view mirror scissor viewport
+      // Rear-view mirror scissor viewport
       const mirrorW = Math.floor(w * 0.22);
       const mirrorH = Math.floor(h * 0.14);
       const mirrorX = Math.floor((w - mirrorW) / 2);
@@ -200,7 +212,7 @@
       renderer.setScissor(mirrorX, mirrorY, mirrorW, mirrorH);
       renderer.setScissorTest(true);
 
-      // render backward-facing view
+      // Render backward-facing view
       renderer.render(scene, rearCamera);
     }
 
