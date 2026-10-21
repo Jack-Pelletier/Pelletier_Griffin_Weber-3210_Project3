@@ -1,11 +1,68 @@
-// there is a lot of clipping and dimensions not lining up after changes, will clean up later :I
+// glsl vertex shader
+const screenVertexShader = `
+  varying vec2 vUv;
+  varying vec3 vNormal;
 
+  void main() {
+    vUv = uv;
+    vNormal = normalize(normalMatrix * normal);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+// glsl fragment shader
+const screenFragmentShader = `
+  uniform float uTime;
+  uniform vec3 uColor;
+  varying vec2 vUv;
+
+  void main() {
+    // Procedural grid lines
+    vec2 gridUv = fract(vUv * 10.0);
+    float lineX = step(0.90, gridUv.x) + step(gridUv.x, 0.10);
+    float lineY = step(0.90, gridUv.y) + step(gridUv.y, 0.10);
+    float gridPattern = clamp(lineX + lineY, 0.0, 1.0);
+
+    // Animated vertical scanlines
+    float scanline = sin(vUv.y * 40.0 - uTime * 4.0) * 0.2 + 0.8;
+
+    // Pulse wave
+    float pulse = sin(uTime * 2.0 + vUv.x * 4.0) * 0.15 + 0.85;
+
+    vec3 finalColor = uColor * (gridPattern * 0.7 + 0.3) * scanline * pulse;
+    
+    // Explicit Alpha Blending factor
+    gl_FragColor = vec4(finalColor, 0.85);
+  }
+`;
+
+// creates the spaceship geometries and overall model
 class SpaceshipModel {
   constructor() {
-    // using 'this' for more concise text
     this.group = new THREE.Group();
 
-    // materials
+    // uniforms for shader dispalys
+    this.shaderUniforms = {
+      uTime: { value: 0 },
+      uColorCyan: { value: new THREE.Color(0x00d5ff) },
+      uColorOrange: { value: new THREE.Color(0xff9900) },
+      uColorGreen: { value: new THREE.Color(0x00ff88) }
+    };
+
+    // custom alpha blending
+    const createShaderMaterial = (colorUniform) => new THREE.ShaderMaterial({
+      vertexShader: screenVertexShader,
+      fragmentShader: screenFragmentShader,
+      uniforms: {
+        uTime: this.shaderUniforms.uTime,
+        uColor: colorUniform
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.NormalBlending
+    });
+
+    // spaceship materials
     this.materials = {
       hull: new THREE.MeshStandardMaterial({
         color: 0x222630,
@@ -37,12 +94,13 @@ class SpaceshipModel {
         metalness: 0.1,
         flatShading: true
       }),
-      // Blocky display & indicator materials
-      screenCyan: new THREE.MeshBasicMaterial({ color: 0x00d5ff }),
-      screenOrange: new THREE.MeshBasicMaterial({ color: 0xff9900 }),
-      screenGreen: new THREE.MeshBasicMaterial({ color: 0x00ff88 }),
+      // glsl shader display materials
+      screenCyanMat: createShaderMaterial(this.shaderUniforms.uColorCyan),
+      screenOrangeMat: createShaderMaterial(this.shaderUniforms.uColorOrange),
+      screenGreenMat: createShaderMaterial(this.shaderUniforms.uColorGreen),
       btnRed: new THREE.MeshBasicMaterial({ color: 0xff3344 }),
-      btnBlue: new THREE.MeshBasicMaterial({ color: 0x0088ff })
+      btnBlue: new THREE.MeshBasicMaterial({ color: 0x0088ff }),
+      conduitMat: new THREE.MeshStandardMaterial({ color: 0x556075, metalness: 0.8, roughness: 0.2 })
     };
 
     this.buildCockpit();
@@ -55,7 +113,6 @@ class SpaceshipModel {
     this.buildSeat();
     this.buildViewportFrame();
     this.buildFlightControls();
-    this.buildMirrorHousing();
   }
 
   // floor and pedals
@@ -95,7 +152,7 @@ class SpaceshipModel {
     this.group.add(floorGroup);
   }
 
-  // dashboard
+  // dashboard console & animated screens
   buildDashboard() {
     const dashGroup = new THREE.Group();
 
@@ -108,7 +165,7 @@ class SpaceshipModel {
     centerBlock.rotation.x = Math.PI * 0.15;
     dashGroup.add(centerBlock);
 
-    // left console
+    // left console wing
     const leftWing = new THREE.Mesh(
       new THREE.BoxGeometry(0.75, 0.4, 0.5),
       this.materials.dashboard
@@ -117,7 +174,7 @@ class SpaceshipModel {
     leftWing.rotation.set(Math.PI * 0.15, Math.PI * 0.15, -Math.PI * 0.05);
     dashGroup.add(leftWing);
 
-    // right console
+    // right console wing
     const rightWing = new THREE.Mesh(
       new THREE.BoxGeometry(0.75, 0.4, 0.5),
       this.materials.dashboard
@@ -126,10 +183,11 @@ class SpaceshipModel {
     rightWing.rotation.set(Math.PI * 0.15, -Math.PI * 0.15, Math.PI * 0.05);
     dashGroup.add(rightWing);
 
+    // aniamted screens!
     // center screen
     const mainScreen = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.25, 0.02),
-      this.materials.screenCyan
+      new THREE.PlaneGeometry(0.5, 0.3),
+      this.materials.screenCyanMat
     );
     mainScreen.position.set(0, -0.4, -0.75);
     mainScreen.rotation.x = Math.PI * 0.15;
@@ -137,30 +195,42 @@ class SpaceshipModel {
 
     // left screen
     const leftScreen = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.25, 0.02),
-      this.materials.screenOrange
+      new THREE.PlaneGeometry(0.4, 0.2),
+      this.materials.screenOrangeMat
     );
-    leftScreen.position.set(-0.7, -0.45, -0.75);
+    leftScreen.position.set(-0.75, -0.4, -0.75);
     leftScreen.rotation.set(Math.PI * 0.15, Math.PI * 0.15, -Math.PI * 0.05);
     dashGroup.add(leftScreen);
 
     // right screen
     const rightScreen = new THREE.Mesh(
-      new THREE.BoxGeometry(0.4, 0.25, 0.02),
-      this.materials.screenGreen
+      new THREE.PlaneGeometry(0.4, 0.2),
+      this.materials.screenGreenMat
     );
-    rightScreen.position.set(0.7, -0.45, -0.75);
+    rightScreen.position.set(0.75, -0.4, -0.75);
     rightScreen.rotation.set(Math.PI * 0.15, -Math.PI * 0.15, Math.PI * 0.05);
     dashGroup.add(rightScreen);
+
+    // switches and buttons - a lot of them
+    const btnGeo = new THREE.BoxGeometry(0.035, 0.035, 0.035);
+    for (let i = 0; i < 6; i++) {
+      const btn = new THREE.Mesh(
+        btnGeo,
+        i % 2 === 0 ? this.materials.btnRed : this.materials.btnBlue
+      );
+      btn.position.set(-0.20 + i * 0.1, -0.30, -0.6);
+      btn.rotation.x = Math.PI * 0.15;
+      dashGroup.add(btn);
+    }
 
     this.group.add(dashGroup);
   }
 
-  // roof and walls
+  // roof, walls, conduits & desk panels
   buildEnclosedWallsAndRoof() {
     const structureGroup = new THREE.Group();
 
-    // overhead
+    // overhead roof
     const roof = new THREE.Mesh(
       new THREE.BoxGeometry(1.5, 0.1, 1.5),
       this.materials.hull
@@ -173,17 +243,17 @@ class SpaceshipModel {
       new THREE.BoxGeometry(0.5, 0.15, 0.75),
       this.materials.dashboard
     );
-    roofConsole.position.set(0, 0.7, -0.4);
+    roofConsole.position.set(0, 0.7, -0.5);
     roofConsole.rotation.x = -Math.PI * 0.05;
     structureGroup.add(roofConsole);
 
     // overhead screen
     const roofDisplay = new THREE.Mesh(
-      new THREE.BoxGeometry(0.35, 0.02, 0.25),
-      this.materials.screenCyan
+      new THREE.PlaneGeometry(0.35, 0.2),
+      this.materials.screenCyanMat
     );
-    roofDisplay.position.set(0, 0.6, -0.4);
-    roofDisplay.rotation.x = -Math.PI * 0.05;
+    roofDisplay.position.set(0, 0.6, -0.5);
+    roofDisplay.rotation.x = Math.PI * 0.45;
     structureGroup.add(roofDisplay);
 
     // left wall
@@ -202,6 +272,16 @@ class SpaceshipModel {
     rightWall.position.set(1, 0, -0.2);
     structureGroup.add(rightWall);
 
+    // conduit & wall details
+    const conduitGeo = new THREE.BoxGeometry(0.05, 0.05, 1.5);
+    const leftConduit = new THREE.Mesh(conduitGeo, this.materials.conduitMat);
+    leftConduit.position.set(-0.9, 0.25, -0.2);
+    structureGroup.add(leftConduit);
+
+    const rightConduit = new THREE.Mesh(conduitGeo, this.materials.conduitMat);
+    rightConduit.position.set(0.9, 0.25, -0.2);
+    structureGroup.add(rightConduit);
+
     // left desk
     const leftDesk = new THREE.Mesh(
       new THREE.BoxGeometry(0.35, 0.35, 1),
@@ -218,41 +298,49 @@ class SpaceshipModel {
     rightDesk.position.set(0.8, -0.6, -0.2);
     structureGroup.add(rightDesk);
 
-    // left desk throttle
+    // throttles and keypad
     const throttleBase = new THREE.Mesh(
-      new THREE.BoxGeometry(0.1, 0.05, 0.25),
+      new THREE.BoxGeometry(0.15, 0.05, 0.25),
       this.materials.accent
     );
-    throttleBase.position.set(-0.75, -0.40, -0.25);
+    throttleBase.position.set(-0.8, -0.40, -0.25);
     structureGroup.add(throttleBase);
 
-    // the switch
-    const throttleLever = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 0.12, 0.2),
-      this.materials.frame
-    );
-    throttleLever.position.set(-0.75, -0.4, -0.25);
-    throttleLever.rotation.x = -Math.PI * -0.1;
-    structureGroup.add(throttleLever);
+    // two throttle levers
+    const lever1 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.05), this.materials.frame);
+    lever1.position.set(-0.85, -0.4, -0.275);
+    lever1.rotation.x = -Math.PI * 0.1;
+    structureGroup.add(lever1);
 
-    // right desk pad
-    const keypad = new THREE.Mesh(
-      new THREE.BoxGeometry(0.20, 0.02, 0.25),
-      this.materials.accent
-    );
-    keypad.position.set(0.75, -0.4, -0.25);
-    structureGroup.add(keypad);
+    const lever2 = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.05), this.materials.frame);
+    lever2.position.set(-0.775, -0.4, -0.225);
+    lever2.rotation.x = -Math.PI * 0.05;
+    structureGroup.add(lever2);
+
+    // right desk keypad
+    const keypadBase = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.02, 0.25), this.materials.accent);
+    keypadBase.position.set(0.8, -0.4, -0.25);
+    structureGroup.add(keypadBase);
+
+    const keyGeo = new THREE.BoxGeometry(0.05, 0.02, 0.05);
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 2; col++) {
+        const key = new THREE.Mesh(keyGeo, (row + col) % 2 === 0 ? this.materials.btnRed : this.materials.btnBlue);
+        key.position.set(0.75 + col * 0.1, -0.375, -0.30 + row * 0.05);
+        structureGroup.add(key);
+      }
+    }
 
     this.group.add(structureGroup);
   }
 
-  // seat (might remove as camera bounds dont show it)
+  // seat
   buildSeat() {
     const seatGroup = new THREE.Group();
 
     // seat cushion
     const seatBase = new THREE.Mesh(
-      new THREE.BoxGeometry(0.6, 0.2, 0.5),
+      new THREE.BoxGeometry(0.5, 0.2, 0.5),
       this.materials.seat
     );
     seatBase.position.set(0, -0.75, 0.1);
@@ -279,7 +367,7 @@ class SpaceshipModel {
       this.materials.frame
     );
     leftPillar.position.set(-0.75, 0.1, -0.75);
-    leftPillar.rotation.set(Math.PI * 0.05, 0, -Math.PI * 0.12);
+    leftPillar.rotation.set(Math.PI * 0.05, 0, -Math.PI * 0.1);
     frameGroup.add(leftPillar);
 
     // right pillar
@@ -288,65 +376,46 @@ class SpaceshipModel {
       this.materials.frame
     );
     rightPillar.position.set(0.75, 0.1, -0.75);
-    rightPillar.rotation.set(Math.PI * 0.05, 0, Math.PI * 0.12);
+    rightPillar.rotation.set(Math.PI * 0.05, 0, Math.PI * 0.1);
     frameGroup.add(rightPillar);
 
     this.group.add(frameGroup);
   }
 
-  // flight controls
+  // flight controls - (depth perception makes this look a bit strange, numbers adjusted)
   buildFlightControls() {
     const controlGroup = new THREE.Group();
 
-    // control base
+    // control base mount
     const mountBase = new THREE.Mesh(
       new THREE.BoxGeometry(0.12, 0.08, 0.12),
       this.materials.frame
     );
-    mountBase.position.set(0, -0.35, -0.45);
+    mountBase.position.set(0, -0.42, -0.45);
     controlGroup.add(mountBase);
 
     // flight shaft
     const shaft = new THREE.Mesh(
-      new THREE.BoxGeometry(0.04, 0.32, 0.04),
+      new THREE.BoxGeometry(0.04, 0.3, 0.04),
       this.materials.accent
     );
-    shaft.position.set(0, -0.25, -0.5);
-    shaft.rotation.x = -Math.PI * 0.10;
+    shaft.position.set(0, -0.26, -0.46);
+    shaft.rotation.x = -Math.PI * 0.1;
     controlGroup.add(shaft);
 
-    // handle Bar
+    // handle bar
     const handle = new THREE.Mesh(
-      new THREE.BoxGeometry(0.25, 0.05, 0.05),
+      new THREE.BoxGeometry(0.28, 0.05, 0.05),
       this.materials.frame
     );
-    handle.position.set(0, -0.1, -0.475);
+    handle.position.set(0, -0.1, -0.5);
     controlGroup.add(handle);
 
     this.group.add(controlGroup);
   }
 
-  // mirror housing
-  buildMirrorHousing() {
-    const mirrorGroup = new THREE.Group();
-
-    const bezel = new THREE.Mesh(
-      new THREE.BoxGeometry(0.55, 0.25, 0.05),
-      this.materials.frame
-    );
-    bezel.position.set(0, 0.45, -0.7);
-    mirrorGroup.add(bezel);
-
-    // rear view temp model
-    const mirrorScreen = new THREE.Mesh(
-      new THREE.BoxGeometry(0.48, 0.18, 0.02),
-      this.materials.screenCyan
-    );
-    mirrorScreen.position.set(0, 0.45, -0.67);
-    mirrorGroup.add(mirrorScreen);
-
-    this.group.add(mirrorGroup);
+  // updates time for animated glsl screens and their shaders
+  update(time) {
+    this.shaderUniforms.uTime.value = time;
   }
-
-  update(time) {}
 }
